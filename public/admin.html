@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Panel - Visa Slots</title>
+  <link rel="stylesheet" href="styles.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+  <div class="app-root">
+    <div id="admin-login-screen" class="card">
+      <h1>Admin Login</h1>
+      <div class="form-group">
+        <label>Username</label>
+        <input id="admin-username" type="text" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input id="admin-password" type="password" autocomplete="off">
+      </div>
+      <button id="admin-login-btn" class="btn primary">Login</button>
+      <div id="admin-login-error" class="error-text"></div>
+    </div>
+
+    <div id="admin-dashboard" class="card hidden">
+      <h2>Admin Slot Control</h2>
+
+      <div class="filters">
+        <div class="form-group">
+          <label>Visa Type</label>
+          <select id="admin-visa-type">
+            <option value="Tourist" selected>Tourist</option>
+            <option value="Student">Student</option>
+            <option value="Work">Work</option>
+            <option value="Visit">Visit</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Center</label>
+          <select id="admin-center-select">
+            <option value="DXB" selected>Dubai (DXB)</option>
+            <option value="AUH">Abu Dhabi (AUH)</option>
+            <option value="ISB">Islamabad (ISB)</option>
+            <option value="LHR">Lahore (LHR)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="admin-main">
+        <div class="calendar-section">
+          <div class="calendar-header">
+            <button id="admin-prev-month-btn" class="link-btn">&#8249; Previous</button>
+            <div id="admin-calendar-month-label"></div>
+            <button id="admin-next-month-btn" class="link-btn">Next &#8250;</button>
+          </div>
+          <div id="admin-calendar-grid" class="calendar-grid"></div>
+        </div>
+
+        <div class="admin-editor">
+          <h3>Date Status Editor</h3>
+          <div>
+            <span id="admin-selected-date-label">No date selected</span>
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select id="admin-date-status">
+              <option value="available">Available</option>
+              <option value="na">Not Available</option>
+              <option value="full">Full</option>
+              <option value="holiday">Holiday</option>
+            </select>
+          </div>
+          <button id="admin-save-date-status-btn" class="btn primary small">Save Date Status</button>
+
+          <h3>Time Slot Editor</h3>
+          <div id="admin-slots-editor" class="slots-container small"></div>
+          <button id="admin-save-slots-btn" class="btn secondary small">Save Slot Changes</button>
+
+          <h3>Simulation Controls</h3>
+          <button id="simulate-drop-btn" class="btn small">Simulate Slot Drop</button>
+          <label class="toggle">
+            <input type="checkbox" id="heavy-load-toggle">
+            <span>Simulate Heavy Load</span>
+          </label>
+
+          <h3>JSON Preview</h3>
+          <pre id="json-preview" class="json-preview"></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="admin.js"></script>
+</body>
+</html>

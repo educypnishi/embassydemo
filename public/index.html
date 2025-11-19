@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Visa Appointment Portal - Demo</title>
+  <link rel="stylesheet" href="styles.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+  <div id="app-root" class="app-root">
+    <div id="login-screen" class="card">
+      <h1>Visa Appointment System</h1>
+      <div class="form-group">
+        <label>Username</label>
+        <input id="login-username" type="text" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input id="login-password" type="password" autocomplete="off">
+      </div>
+      <input type="hidden" id="csrf-token" value="">
+      <button id="login-btn" class="btn primary">Login</button>
+      <div id="login-error" class="error-text"></div>
+    </div>
+
+    <div id="dashboard" class="card hidden">
+      <h2>Appointment Dashboard</h2>
+
+      <div class="filters">
+        <div class="form-group">
+          <label>Country</label>
+          <select id="country-select">
+            <option value="Pakistan">Pakistan</option>
+            <option value="India">India</option>
+            <option value="UAE" selected>UAE</option>
+            <option value="USA">USA</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Visa Type</label>
+          <select id="visa-type-select">
+            <option value="Tourist" selected>Tourist</option>
+            <option value="Student">Student</option>
+            <option value="Work">Work</option>
+            <option value="Visit">Visit</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Center</label>
+          <select id="center-select">
+            <option value="DXB" selected>Dubai (DXB)</option>
+            <option value="AUH">Abu Dhabi (AUH)</option>
+            <option value="ISB">Islamabad (ISB)</option>
+            <option value="LHR">Lahore (LHR)</option>
+          </select>
+        </div>
+        <button id="check-appointments-btn" class="btn secondary">
+          Check Appointments
+        </button>
+      </div>
+
+      <div id="random-class-wrapper" class="">
+        <div class="calendar-section">
+          <div class="calendar-header">
+            <button id="prev-month-btn" class="link-btn">&#8249; Previous</button>
+            <div id="calendar-month-label"></div>
+            <button id="next-month-btn" class="link-btn">Next &#8250;</button>
+          </div>
+          <div id="calendar-grid" class="calendar-grid"></div>
+          <div class="legend">
+            <span class="legend-item available">Available</span>
+            <span class="legend-item na">Not Available</span>
+            <span class="legend-item full">Full</span>
+            <span class="legend-item holiday">Holiday</span>
+          </div>
+        </div>
+
+        <div class="slots-section">
+          <h3 id="slot-date-label">Select a date to view slots</h3>
+          <div id="slots-container" class="slots-container"></div>
+        </div>
+      </div>
+
+      <div id="session-popup" class="session-popup hidden">
+        <div class="session-popup-inner">
+          <h3>Session Expired</h3>
+          <p>Your session has expired due to inactivity. Please login again.</p>
+          <button id="session-reload-btn" class="btn primary">Ok</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
