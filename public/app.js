@@ -11,7 +11,7 @@
   const centerSelect = document.getElementById('center-select');
   const checkAppointmentsBtn = document.getElementById('check-appointments-btn');
 
-  const calendarGrid = document.getElementById('calendar-grid');
+  const vfsCalendar = document.getElementById('vfs-calendar');
   const calendarMonthLabel = document.getElementById('calendar-month-label');
   const prevMonthBtn = document.getElementById('prev-month-btn');
   const nextMonthBtn = document.getElementById('next-month-btn');
@@ -74,67 +74,121 @@
     return dateObj.toLocaleDateString(undefined, opts);
   }
 
-  function buildCalendarGrid(daysData) {
-    calendarGrid.innerHTML = '';
+  function buildCalendarGrid(daysData, options = {}) {
+    const { freezeBlank } = options;
+    const tbody = vfsCalendar.querySelector('tbody');
+    tbody.innerHTML = '';
 
-    const headerNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    headerNames.forEach((d) => {
-      const h = document.createElement('div');
-      h.textContent = d;
-      h.className = 'calendar-day-header';
-      calendarGrid.appendChild(h);
-    });
+    if (freezeBlank) {
+      // keep empty body for blank-calendar freeze
+      return;
+    }
 
     const firstDay = new Date(currentMonth.getTime());
-    const startWeekday = (firstDay.getDay() + 6) % 7;
+    const startWeekday = (firstDay.getDay() + 6) % 7; // Mon=0
     const month = currentMonth.getMonth();
     const year = currentMonth.getFullYear();
-
     const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-    for (let i = 0; i < startWeekday; i++) {
-      const cell = document.createElement('div');
-      cell.className = 'calendar-cell inactive';
-      calendarGrid.appendChild(cell);
+    const map = {};
+    (daysData || []).forEach((d) => {
+      const date = d.date || d.d || d.appointmentDate;
+      const status =
+        d.status ||
+        d.st ||
+        (typeof d.availability === 'boolean' ? (d.availability ? 'available' : 'na') : null) ||
+        'na';
+      if (!date) return;
+      map[date] = status;
+    });
+
+    // total cells = 5 weeks * 7 days
+    let currentCell = 0;
+    for (let week = 0; week < 5; week++) {
+      const tr = document.createElement('tr');
+      for (let dow = 0; dow < 7; dow++) {
+        const td = document.createElement('td');
+        td.className = 'vfs-day-cell vfs-na';
+        td.dataset.status = 'na';
+
+        const globalIndex = week * 7 + dow;
+        const dayIndex = globalIndex - startWeekday + 1;
+
+        if (dayIndex >= 1 && dayIndex <= daysInMonth) {
+          const dateObj = new Date(year, month, dayIndex);
+          const iso = dateObj.toISOString().slice(0, 10);
+          const status = map[iso] || 'na';
+          const statusClass =
+            status === 'available'
+              ? 'vfs-available'
+              : status === 'full'
+              ? 'vfs-full'
+              : status === 'holiday'
+              ? 'vfs-holiday'
+              : 'vfs-na';
+
+          td.className = 'vfs-day-cell ' + statusClass;
+          td.dataset.date = iso;
+          td.dataset.status = status;
+          td.textContent = dayIndex;
+        } else {
+          // empty leading/trailing cells
+          td.className = 'vfs-day-cell vfs-na';
+          td.textContent = '';
+        }
+
+        tr.appendChild(td);
+        currentCell++;
+      }
+      tbody.appendChild(tr);
     }
 
-    for (let d = 1; d <= daysInMonth; d++) {
-      const dateObj = new Date(year, month, d);
-      const iso = dateObj.toISOString().slice(0, 10);
-      const dayInfo = daysData.find((x) => x.date === iso);
-      const status = dayInfo ? dayInfo.status : 'na';
+    // DOM corruption on table cells
+    setTimeout(() => {
+      const cells = Array.from(tbody.querySelectorAll('.vfs-day-cell'));
 
-      const cell = document.createElement('div');
-      cell.className = 'calendar-cell';
-      cell.dataset.date = iso;
-      cell.dataset.status = status;
-      cell.textContent = d;
-
-      cell.addEventListener('click', () => {
-        if (cell.classList.contains('inactive')) return;
-        document
-          .querySelectorAll('.calendar-cell.selected')
-          .forEach((c) => c.classList.remove('selected'));
-        cell.classList.add('selected');
-        selectedDate = iso;
-        slotDateLabel.textContent = `Slots for ${iso}`;
-        loadDaySlots(iso);
+      // random removal of some cells' content (but keep td)
+      cells.forEach((c) => {
+        if (Math.random() < 0.03) {
+          c.textContent = '';
+          delete c.dataset.date;
+          c.dataset.status = 'na';
+        }
       });
 
-      calendarGrid.appendChild(cell);
-    }
-
-    setTimeout(() => {
-      if (Math.random() < 0.3) {
-        const cells = calendarGrid.querySelectorAll('.calendar-cell');
-        cells.forEach((c) => {
-          if (Math.random() < 0.1) {
-            c.classList.add('mut-' + Math.random().toString(36).slice(2, 5));
-          }
-        });
+      // ghost dates rows appended
+      if (Math.random() < 0.4) {
+        const ghostRow = document.createElement('tr');
+        for (let i = 0; i < 7; i++) {
+          const ghost = document.createElement('td');
+          ghost.className = 'vfs-day-cell vfs-ghost';
+          const ghostIdx = i;
+          const ghostDate = formatMonthKey(currentMonth) + '-0' + ghostIdx;
+          ghost.dataset.date = ghostDate;
+          ghost.dataset.status = 'ghost';
+          ghost.textContent = 'G';
+          ghostRow.appendChild(ghost);
+        }
+        tbody.appendChild(ghostRow);
       }
-    }, 10);
+
+      // wrapper class mutation
+      if (Math.random() < 0.6) randomizeWrapperClass();
+    }, 0);
   }
+
+  vfsCalendar.addEventListener('click', (e) => {
+    if (e.target.tagName !== 'TD') return;
+    const td = e.target;
+    if (td.classList.contains('vfs-na')) return;
+    document
+      .querySelectorAll('.vfs-day-cell.selected')
+      .forEach((c) => c.classList.remove('selected'));
+    td.classList.add('selected');
+    selectedDate = td.dataset.date;
+    slotDateLabel.textContent = `Slots for ${selectedDate}`;
+    loadDaySlots(selectedDate);
+  });
 
   function apiFetch(url, options = {}) {
     const delay = 300 + Math.random() * 1200;

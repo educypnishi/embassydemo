@@ -9,7 +9,7 @@
 <body>
   <div id="app-root" class="app-root">
     <div id="login-screen" class="card">
-      <h1>Visa Appointment System</h1>
+      <h1>User Login - Visa Appointment System</h1>
       <div class="form-group">
         <label>Username</label>
         <input id="login-username" type="text" autocomplete="off">
@@ -66,7 +66,24 @@
             <div id="calendar-month-label"></div>
             <button id="next-month-btn" class="link-btn">Next &#8250;</button>
           </div>
-          <div id="calendar-grid" class="calendar-grid"></div>
+          <div id="appointment-calendar">
+            <table id="vfs-calendar" class="vfs-calendar-table">
+              <thead>
+                <tr>
+                  <th>Mon</th>
+                  <th>Tue</th>
+                  <th>Wed</th>
+                  <th>Thu</th>
+                  <th>Fri</th>
+                  <th>Sat</th>
+                  <th>Sun</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- dynamically filled by app.js -->
+              </tbody>
+            </table>
+          </div>
           <div class="legend">
             <span class="legend-item available">Available</span>
             <span class="legend-item na">Not Available</span>

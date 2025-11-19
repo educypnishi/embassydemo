@@ -109,63 +109,63 @@ select {
   margin-bottom: 8px;
 }
 
-.calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 4px;
+/* VFS/BLS-style table calendar */
+
+#appointment-calendar {
+  margin-top: 4px;
+}
+
+.vfs-calendar-table {
+  width: 100%;
+  border-collapse: collapse;
   font-size: 0.8rem;
 }
 
-.calendar-day-header {
+.vfs-calendar-table th,
+.vfs-calendar-table td {
+  text-align: center;
+  padding: 4px;
+  border: 1px solid #e5e7eb;
+}
+
+.vfs-calendar-table th {
   font-weight: 600;
-  text-align: center;
-  padding: 4px;
   color: #6b7280;
+  background: #f3f4f6;
 }
 
-.calendar-cell {
-  min-height: 40px;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  padding: 4px;
-  text-align: center;
+.vfs-day-cell {
+  min-height: 36px;
   cursor: pointer;
-  border: 1px solid transparent;
-  position: relative;
 }
 
-.calendar-cell[data-status="available"] {
-  background: #dcfce7;
+.vfs-day-cell.vfs-available {
+  background: #d4f8d3;
   color: #166534;
-  border-color: #bbf7d0;
 }
 
-.calendar-cell[data-status="na"] {
-  background: #e5e7eb;
+.vfs-day-cell.vfs-na {
+  background: #e0e0e0;
   color: #4b5563;
-  border-color: #d1d5db;
 }
 
-.calendar-cell[data-status="full"] {
-  background: #fee2e2;
+.vfs-day-cell.vfs-full {
+  background: #ffc2c2;
   color: #b91c1c;
-  border-color: #fecaca;
 }
 
-.calendar-cell[data-status="holiday"] {
-  background: #fef9c3;
+.vfs-day-cell.vfs-holiday {
+  background: #fff4b8;
   color: #b45309;
-  border-color: #fde68a;
 }
 
-.calendar-cell.inactive {
-  background: #f9fafb;
-  color: #9ca3af;
-  cursor: default;
+.vfs-day-cell.vfs-ghost {
+  opacity: 0.35;
 }
 
-.calendar-cell.selected {
+.vfs-day-cell.selected {
   outline: 2px solid #2563eb;
+  outline-offset: -2px;
 }
 
 .legend {
