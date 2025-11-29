@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>US Embassy Visa Appointment Portal</title>
+  <title>Universal Visa Portal Simulator v3.0</title>
   <link rel="stylesheet" href="styles.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
@@ -10,7 +10,18 @@
   <div id="app-root" class="app-root">
     <div class="card embassy-dashboard">
       <div class="embassy-header">
-        <h2>Visa Appointment System</h2>
+        <h2>Universal Visa Appointment Portal</h2>
+        <div class="portal-mode-selector">
+          <label for="portal-mode-select" style="font-size: 0.85rem; color: #6b7280; margin-right: 8px;">Portal Mode:</label>
+          <select id="portal-mode-select" class="mode-dropdown">
+            <option value="us-embassy">US Embassy</option>
+            <option value="vfs-global">VFS Global</option>
+            <option value="bls-schengen">BLS / Schengen JSON</option>
+            <option value="uk-gov">UK GOV</option>
+            <option value="canada-vac">Canada VAC</option>
+            <option value="australia-immi">Australia Immi</option>
+          </select>
+        </div>
         <div class="embassy-session-info">
           <span class="session-badge active">● Session Active</span>
           <span id="session-timer">Time: <span id="time-remaining">--:--</span></span>
@@ -40,6 +51,64 @@
         <button id="check-appointments-btn" class="btn secondary">
           Check Appointments
         </button>
+      </div>
+
+      <!-- Mode-specific UI Elements -->
+      
+      <!-- UK GOV Multi-Step Form -->
+      <div id="uk-gov-form" class="mode-container hidden">
+        <div class="uk-steps-header">
+          <div class="uk-step" data-step="1"><span class="step-number">1</span> Personal Details</div>
+          <div class="uk-step" data-step="2"><span class="step-number">2</span> Passport Info</div>
+          <div class="uk-step" data-step="3"><span class="step-number">3</span> Confirmation</div>
+        </div>
+        <div id="uk-step-content" class="uk-step-content">
+          <p>Complete the form to access appointment calendar...</p>
+          <button id="uk-next-step-btn" class="btn primary">Next Step</button>
+        </div>
+      </div>
+
+      <!-- Canada VAC Queue Screen -->
+      <div id="canada-queue" class="mode-container hidden">
+        <div class="queue-screen">
+          <div class="queue-spinner"></div>
+          <h3>You are in queue</h3>
+          <p id="queue-message">Estimated wait: <span id="queue-time">--</span> seconds</p>
+          <p style="font-size: 0.85rem; color: #6b7280;">Please do not refresh the page...</p>
+        </div>
+      </div>
+
+      <!-- Australia Immi Session Start -->
+      <div id="australia-session-start" class="mode-container hidden">
+        <div class="australia-start-screen">
+          <h3>ImmiAccount Session</h3>
+          <p>Click below to establish your appointment session</p>
+          <button id="australia-start-btn" class="btn primary">Start Session</button>
+          <p style="font-size: 0.75rem; color: #6b7280; margin-top: 12px;">Session establishment may take 1-2 seconds...</p>
+        </div>
+      </div>
+
+      <!-- BLS JSON Mode Banner -->
+      <div id="bls-json-banner" class="mode-container hidden">
+        <div class="bls-banner">
+          ⚠️ <strong>JSON API Mode:</strong> This portal uses JSON-based calendar. No HTML calendar available.
+        </div>
+      </div>
+
+      <!-- VFS Global Wrapper (fake iframe) -->
+      <div id="vfs-iframe-wrapper" class="mode-container hidden">
+        <div class="vfs-outer-frame">
+          <div class="vfs-loading-outer" id="vfs-loading-outer">
+            <div class="vfs-spinner"></div>
+            <p>Loading VFS Portal...</p>
+          </div>
+          <div class="vfs-inner-frame hidden" id="vfs-inner-frame">
+            <div class="vfs-loading-inner" id="vfs-loading-inner">
+              <div class="vfs-spinner"></div>
+              <p>Please wait...</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div id="embassy-calendar-wrapper" class="embassy-wrapper">
@@ -97,6 +166,12 @@
       <div class="debug-header">
         <h4>Embassy Health Monitor</h4>
         <button id="copy-debug-btn" class="btn-copy-debug" title="Copy All Debug Info">📋 Copy All</button>
+      </div>
+      
+      <!-- Active Mode Display -->
+      <div class="debug-section">
+        <strong>Active Portal Mode:</strong>
+        <div id="health-active-mode" style="font-size: 0.8rem; color: #60a5fa; font-weight: 600; margin-top: 4px;">--</div>
       </div>
       
       <!-- Health Status Grid -->

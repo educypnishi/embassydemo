@@ -5,6 +5,27 @@
   let sessionTimer = null;
   let debugMode = false;
 
+  // Portal Mode System
+  let activePortalMode = localStorage.getItem('portalMode') || 'us-embassy';
+  const portalModeSelect = document.getElementById('portal-mode-select');
+  const healthActiveMode = document.getElementById('health-active-mode');
+  
+  // Mode-specific DOM elements
+  const ukGovForm = document.getElementById('uk-gov-form');
+  const canadaQueue = document.getElementById('canada-queue');
+  const australiaSessionStart = document.getElementById('australia-session-start');
+  const blsJsonBanner = document.getElementById('bls-json-banner');
+  const vfsIframeWrapper = document.getElementById('vfs-iframe-wrapper');
+  const ukNextStepBtn = document.getElementById('uk-next-step-btn');
+  const australiaStartBtn = document.getElementById('australia-start-btn');
+  
+  // Mode state
+  let ukCurrentStep = 1;
+  let ukStepStartTime = Date.now();
+  let canadaQueueActive = false;
+  let canadaTokenRefreshTimer = null;
+  let australiaSessionEstablished = false;
+  
   // DOM Elements
   const calendarWrapper = document.getElementById('embassy-calendar-wrapper');
   const calendarTable = document.getElementById('embassy-calendar');
@@ -56,7 +77,8 @@
     domMutationCount: 0,
     randomDelaysEnabled: true,
     lastDelayMs: 0,
-    noAvailabilityTriggered: false
+    noAvailabilityTriggered: false,
+    activeMode: activePortalMode
   };
 
   // Check if logged in
@@ -223,6 +245,274 @@ ${JSON.stringify(debugInfo.lastServerResponse, null, 2)}
     });
   });
 
+  // ========== UNIVERSAL PORTAL MODE SYSTEM ==========
+  
+  // Portal Mode Switcher
+  function switchPortalMode(mode) {
+    activePortalMode = mode;
+    localStorage.setItem('portalMode', mode);
+    healthStats.activeMode = mode;
+    
+    // Hide all mode-specific containers
+    if (ukGovForm) ukGovForm.classList.add('hidden');
+    if (canadaQueue) canadaQueue.classList.add('hidden');
+    if (australiaSessionStart) australiaSessionStart.classList.add('hidden');
+    if (blsJsonBanner) blsJsonBanner.classList.add('hidden');
+    if (vfsIframeWrapper) vfsIframeWrapper.classList.add('hidden');
+    calendarWrapper.classList.remove('hidden');
+    
+    // Clear mode state
+    ukCurrentStep = 1;
+    canadaQueueActive = false;
+    australiaSessionEstablished = false;
+    if (canadaTokenRefreshTimer) clearInterval(canadaTokenRefreshTimer);
+    
+    // Apply mode-specific setup
+    switch(mode) {
+      case 'us-embassy':
+        setupUSEmbassyMode();
+        break;
+      case 'vfs-global':
+        setupVFSGlobalMode();
+        break;
+      case 'bls-schengen':
+        setupBLSSchengenMode();
+        break;
+      case 'uk-gov':
+        setupUKGovMode();
+        break;
+      case 'canada-vac':
+        setupCanadaVACMode();
+        break;
+      case 'australia-immi':
+        setupAustraliaImmiMode();
+        break;
+    }
+    
+    if (debugMode) updateHealthMonitor();
+  }
+  
+  // Mode Setup Functions
+  function setupUSEmbassyMode() {
+    // US Embassy - already implemented, no special setup needed
+    loadCalendar();
+  }
+  
+  function setupVFSGlobalMode() {
+    vfsIframeWrapper.classList.remove('hidden');
+    calendarWrapper.classList.add('hidden');
+    
+    // 2-step loading: outer → inner
+    const vfsLoadingOuter = document.getElementById('vfs-loading-outer');
+    const vfsInnerFrame = document.getElementById('vfs-inner-frame');
+    const vfsLoadingInner = document.getElementById('vfs-loading-inner');
+    
+    vfsLoadingOuter.classList.remove('hidden');
+    
+    // Step 1: Load outer frame (1.5-2.5s)
+    setTimeout(() => {
+      vfsLoadingOuter.classList.add('hidden');
+      vfsInnerFrame.classList.remove('hidden');
+      vfsLoadingInner.classList.remove('hidden');
+      
+      // Step 2: Load inner frame (1-1.5s)
+      setTimeout(() => {
+        vfsLoadingInner.classList.add('hidden');
+        vfsIframeWrapper.classList.add('hidden');
+        calendarWrapper.classList.remove('hidden');
+        
+        // Random "Please wait..." overlay (30% chance)
+        if (Math.random() < 0.3) {
+          showVFSOverlay();
+        }
+        
+        loadCalendar();
+      }, 1000 + Math.random() * 500);
+    }, 1500 + Math.random() * 1000);
+  }
+  
+  function showVFSOverlay() {
+    const overlay = document.createElement('div');
+    overlay.className = 'vfs-please-wait-overlay';
+    overlay.innerHTML = '<div class="vfs-overlay-content"><div class="vfs-spinner"></div><p>Please wait...</p></div>';
+    document.body.appendChild(overlay);
+    
+    setTimeout(() => {
+      overlay.remove();
+    }, 2000 + Math.random() * 2000);
+  }
+  
+  function setupBLSSchengenMode() {
+    blsJsonBanner.classList.remove('hidden');
+    loadBLSJsonCalendar();
+  }
+  
+  function setupUKGovMode() {
+    ukGovForm.classList.remove('hidden');
+    calendarWrapper.classList.add('hidden');
+    ukCurrentStep = 1;
+    ukStepStartTime = Date.now();
+    updateUKSteps();
+    
+    // Check step timeout every 10 seconds
+    const stepTimer = setInterval(() => {
+      const elapsed = Date.now() - ukStepStartTime;
+      if (elapsed > 180000) { // 3 minutes
+        clearInterval(stepTimer);
+        handleSessionExpired();
+      }
+    }, 10000);
+  }
+  
+  function updateUKSteps() {
+    const steps = document.querySelectorAll('.uk-step');
+    steps.forEach((step, idx) => {
+      step.classList.remove('active', 'completed');
+      if (idx + 1 < ukCurrentStep) step.classList.add('completed');
+      if (idx + 1 === ukCurrentStep) step.classList.add('active');
+    });
+    
+    const content = document.getElementById('uk-step-content');
+    if (ukCurrentStep === 1) {
+      content.innerHTML = '<p><strong>Step 1: Personal Details</strong></p><p>Please provide your information...</p><button id="uk-next-step-btn" class="btn primary">Next Step</button>';
+    } else if (ukCurrentStep === 2) {
+      content.innerHTML = '<p><strong>Step 2: Passport Information</strong></p><p>Enter your passport details...</p><button id="uk-next-step-btn" class="btn primary">Next Step</button>';
+    } else if (ukCurrentStep === 3) {
+      content.innerHTML = '<p><strong>Step 3: Confirmation</strong></p><p>Review your information...</p><button id="uk-next-step-btn" class="btn primary">Proceed to Appointments</button>';
+    }
+    
+    document.getElementById('uk-next-step-btn').addEventListener('click', () => {
+      ukCurrentStep++;
+      ukStepStartTime = Date.now(); // Reset timer
+      if (ukCurrentStep > 3) {
+        ukGovForm.classList.add('hidden');
+        calendarWrapper.classList.remove('hidden');
+        loadCalendar();
+      } else {
+        updateUKSteps();
+      }
+    });
+  }
+  
+  function setupCanadaVACMode() {
+    canadaQueue.classList.remove('hidden');
+    calendarWrapper.classList.add('hidden');
+    canadaQueueActive = true;
+    
+    // Queue wait: 30-90 seconds
+    const queueWait = 30 + Math.floor(Math.random() * 61);
+    const queueTimeSpan = document.getElementById('queue-time');
+    let remaining = queueWait;
+    
+    queueTimeSpan.textContent = remaining;
+    
+    const queueTimer = setInterval(() => {
+      remaining--;
+      queueTimeSpan.textContent = remaining;
+      
+      if (remaining <= 0) {
+        clearInterval(queueTimer);
+        canadaQueue.classList.add('hidden');
+        calendarWrapper.classList.remove('hidden');
+        canadaQueueActive = false;
+        loadCalendar();
+        
+        // Start token refresh every 2 minutes
+        canadaTokenRefreshTimer = setInterval(() => {
+          updateAjaxStage('Canada: Token refreshed');
+        }, 120000);
+      }
+    }, 1000);
+  }
+  
+  function setupAustraliaImmiMode() {
+    australiaSessionStart.classList.remove('hidden');
+    calendarWrapper.classList.add('hidden');
+    australiaSessionEstablished = false;
+  }
+  
+  // Australia Start Session Button
+  if (australiaStartBtn) {
+    australiaStartBtn.addEventListener('click', () => {
+      australiaStartBtn.disabled = true;
+      australiaStartBtn.textContent = 'Establishing Session...';
+      
+      // Session delay: 1-2 seconds
+      const delay = 1000 + Math.random() * 1000;
+      
+      setTimeout(() => {
+        australiaSessionEstablished = true;
+        australiaSessionStart.classList.add('hidden');
+        calendarWrapper.classList.remove('hidden');
+        loadCalendar();
+      }, delay);
+    });
+  }
+  
+  // BLS JSON Calendar Loader
+  function loadBLSJsonCalendar() {
+    const monthKey = formatMonthKey(currentMonth);
+    const center = centerSelect.value;
+    const visaType = visaTypeSelect.value;
+    
+    calendarMonthLabel.textContent = formatDisplayMonth(currentMonth);
+    calendarLoading.classList.remove('hidden');
+    document.getElementById('appointment-calendar').classList.add('hidden');
+    
+    updateAjaxStage('Loading JSON calendar...');
+    
+    fetch(`/api/embassy/json-calendar?month=${encodeURIComponent(monthKey)}&center=${encodeURIComponent(center)}&type=${encodeURIComponent(visaType)}`, {
+      headers: { 'X-Session-Token': sessionToken }
+    })
+    .then(res => res.json())
+    .then(data => {
+      calendarLoading.classList.add('hidden');
+      document.getElementById('appointment-calendar').classList.remove('hidden');
+      
+      updateAjaxStage(`JSON calendar loaded: ${data.totalAvailable} dates`);
+      
+      if (debugMode && debugServerJson) {
+        debugServerJson.textContent = JSON.stringify(data, null, 2);
+      }
+      
+      // Render JSON dates as list
+      const tbody = calendarTable.querySelector('tbody');
+      tbody.innerHTML = '';
+      
+      if (data.availableDates && data.availableDates.length > 0) {
+        data.availableDates.forEach(dateInfo => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td colspan="7" class="bls-json-date" data-date="${dateInfo.date}">
+              <strong>${dateInfo.date}</strong> (${dateInfo.dayOfWeek}) - ${dateInfo.slotsAvailable} slots available
+            </td>
+          `;
+          tr.style.cursor = 'pointer';
+          tr.addEventListener('click', () => {
+            window.location.href = `/select-time?date=${dateInfo.date}&center=${center}&type=${visaType}`;
+          });
+          tbody.appendChild(tr);
+        });
+      } else {
+        const tr = document.createElement('tr');
+        tr.innerHTML = '<td colspan="7" style="text-align:center; color:#6b7280;">No appointments available</td>';
+        tbody.appendChild(tr);
+      }
+    })
+    .catch(err => {
+      calendarLoading.classList.add('hidden');
+      updateAjaxStage('JSON calendar load failed');
+    });
+  }
+  
+  // Portal Mode Select Event
+  if (portalModeSelect) {
+    portalModeSelect.value = activePortalMode;
+    portalModeSelect.addEventListener('change', (e) => {
+      switchPortalMode(e.target.value);
+    });
+  }
+  
   // Date formatting
   function formatMonthKey(dateObj) {
     const y = dateObj.getFullYear();
@@ -238,6 +528,19 @@ ${JSON.stringify(debugInfo.lastServerResponse, null, 2)}
   // Health monitor update function
   function updateHealthMonitor() {
     if (!debugMode) return;
+    
+    // Active Mode Display
+    if (healthActiveMode) {
+      const modeNames = {
+        'us-embassy': 'US Embassy',
+        'vfs-global': 'VFS Global',
+        'bls-schengen': 'BLS / Schengen JSON',
+        'uk-gov': 'UK GOV',
+        'canada-vac': 'Canada VAC',
+        'australia-immi': 'Australia Immi'
+      };
+      healthActiveMode.textContent = modeNames[activePortalMode] || activePortalMode;
+    }
     
     // Login Enforcement
     setHealthStatus(healthLogin, 'ON', 'status-on');
@@ -433,13 +736,23 @@ ${JSON.stringify(debugInfo.lastServerResponse, null, 2)}
           const iso = dateObj.toISOString().slice(0, 10);
           const dayInfo = dateMap[iso] || { status: 'na', isOpen: false };
 
-          // Embassy DOM pattern: td.Date with multiple classes
+          // Mode-specific DOM patterns
           const td = document.createElement('td');
+          
+          // Base classes (US Embassy / default)
           td.className = 'Date embassy-day-cell fc-daygrid-day';
           
-          // Add embassy-specific classes and attributes
+          // VFS Global Mode: Add VFS-specific classes
+          if (activePortalMode === 'vfs-global') {
+            td.classList.add('vfs-day-cell');
+          }
+          
+          // Add status-specific classes and attributes
           if (dayInfo.isOpen || dayInfo.status === 'available') {
             td.classList.add('isOpen', 'open-date');
+            if (activePortalMode === 'vfs-global') {
+              td.classList.add('vfs-available');
+            }
             td.setAttribute('data-day-status', 'open');
             td.setAttribute('data-status', 'available');
           } else if (dayInfo.status === 'full') {
@@ -501,27 +814,47 @@ ${JSON.stringify(debugInfo.lastServerResponse, null, 2)}
   // Navigation
   prevMonthBtn.addEventListener('click', () => {
     currentMonth.setMonth(currentMonth.getMonth() - 1);
-    loadCalendar();
+    if (activePortalMode === 'bls-schengen') {
+      loadBLSJsonCalendar();
+    } else {
+      loadCalendar();
+    }
   });
 
   nextMonthBtn.addEventListener('click', () => {
     currentMonth.setMonth(currentMonth.getMonth() + 1);
-    loadCalendar();
+    if (activePortalMode === 'bls-schengen') {
+      loadBLSJsonCalendar();
+    } else {
+      loadCalendar();
+    }
   });
 
   checkBtn.addEventListener('click', () => {
-    loadCalendar();
+    if (activePortalMode === 'bls-schengen') {
+      loadBLSJsonCalendar();
+    } else {
+      loadCalendar();
+    }
   });
 
   visaTypeSelect.addEventListener('change', () => {
-    loadCalendar();
+    if (activePortalMode === 'bls-schengen') {
+      loadBLSJsonCalendar();
+    } else {
+      loadCalendar();
+    }
   });
 
   centerSelect.addEventListener('change', () => {
-    loadCalendar();
+    if (activePortalMode === 'bls-schengen') {
+      loadBLSJsonCalendar();
+    } else {
+      loadCalendar();
+    }
   });
 
   // Initialize
   startSessionTimer();
-  loadCalendar();
+  switchPortalMode(activePortalMode); // Initialize with saved mode
 })();

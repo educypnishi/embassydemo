@@ -233,6 +233,58 @@ router.get('/time-slots', (req, res) => {
   }, delay);
 });
 
+// JSON Calendar endpoint (for BLS/Schengen mode)
+router.get('/json-calendar', (req, res) => {
+  const token = req.headers['x-session-token'];
+  
+  if (!isValidSession(token)) {
+    return res.status(401).json({ error: 'Session expired', code: 401 });
+  }
+  
+  const monthKey = req.query.month;
+  const center = req.query.center || 'DXB';
+  const type = req.query.type || 'Tourist';
+  
+  if (!monthKey) {
+    return res.status(400).json({ error: 'month query param (YYYY-MM) required' });
+  }
+  
+  const delay = 800 + Math.random() * 1200;
+  
+  setTimeout(() => {
+    const data = readData();
+    
+    // Ensure structure exists
+    if (!data.slots) data.slots = {};
+    if (!data.slots[monthKey]) data.slots[monthKey] = {};
+    if (!data.slots[monthKey][center]) data.slots[monthKey][center] = {};
+    if (!data.slots[monthKey][center][type]) {
+      data.slots[monthKey][center][type] = { days: {} };
+    }
+    
+    const days = data.slots[monthKey][center][type].days || {};
+    
+    // Return only available dates as JSON array (BLS style)
+    const availableDates = Object.keys(days)
+      .filter(dateStr => days[dateStr].status === 'available')
+      .map(dateStr => ({
+        date: dateStr,
+        dayOfWeek: new Date(dateStr).toLocaleDateString('en-US', { weekday: 'short' }),
+        slotsAvailable: Object.values(days[dateStr].slots || {}).filter(s => s === 'available').length
+      }));
+    
+    res.json({
+      month: monthKey,
+      center,
+      type,
+      mode: 'json',
+      availableDates: availableDates,
+      totalAvailable: availableDates.length,
+      message: availableDates.length === 0 ? 'No appointments available' : 'Appointments found'
+    });
+  }, delay);
+});
+
 // Logout endpoint
 router.post('/logout', (req, res) => {
   const token = req.headers['x-session-token'];

@@ -338,11 +338,23 @@ select {
 
 .embassy-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  gap: 12px;
   margin-bottom: 16px;
   padding-bottom: 12px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.embassy-header h2 {
+  margin: 0;
+}
+
+.embassy-header > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .embassy-session-info {
@@ -770,4 +782,256 @@ div.slot[data-status="booked"],
 .debug-panel-small strong {
   color: #60a5fa;
   font-size: 0.8rem;
+}
+
+/* ========== UNIVERSAL PORTAL MODE STYLES ========== */
+
+/* Portal Mode Dropdown */
+.portal-mode-selector {
+  display: flex;
+  align-items: center;
+  margin: 8px 0;
+}
+
+.mode-dropdown {
+  padding: 6px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  background: white;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.mode-dropdown:hover {
+  border-color: #2563eb;
+}
+
+.mode-dropdown:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Mode Container Base */
+.mode-container {
+  margin: 20px 0;
+  padding: 20px;
+  border-radius: 8px;
+  background: #f9fafb;
+}
+
+/* UK GOV Multi-Step Form */
+.uk-steps-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  gap: 12px;
+}
+
+.uk-step {
+  flex: 1;
+  padding: 12px;
+  border-radius: 6px;
+  background: #e5e7eb;
+  text-align: center;
+  font-size: 0.85rem;
+  color: #6b7280;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.uk-step.active {
+  background: #dbeafe;
+  color: #1e40af;
+  font-weight: 600;
+}
+
+.uk-step.completed {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: white;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.uk-step-content {
+  padding: 20px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+}
+
+.uk-step-content p {
+  margin: 8px 0;
+  color: #374151;
+}
+
+/* Canada VAC Queue Screen */
+.queue-screen {
+  text-align: center;
+  padding: 40px 20px;
+  background: white;
+  border-radius: 8px;
+  border: 2px solid #3b82f6;
+}
+
+.queue-screen h3 {
+  color: #1e40af;
+  margin-bottom: 12px;
+}
+
+.queue-screen p {
+  color: #6b7280;
+  margin: 8px 0;
+}
+
+#queue-time {
+  font-weight: 700;
+  color: #2563eb;
+  font-size: 1.2rem;
+}
+
+.queue-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #e5e7eb;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 16px;
+}
+
+/* Australia Immi Session Start */
+.australia-start-screen {
+  text-align: center;
+  padding: 40px 20px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.australia-start-screen h3 {
+  color: #1f2937;
+  margin-bottom: 12px;
+}
+
+.australia-start-screen p {
+  color: #6b7280;
+  margin: 8px 0;
+}
+
+/* BLS JSON Banner */
+.bls-banner {
+  padding: 16px;
+  background: #fef3c7;
+  border: 2px solid #f59e0b;
+  border-radius: 6px;
+  color: #92400e;
+  font-size: 0.9rem;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.bls-json-date {
+  padding: 14px !important;
+  background: #f0f9ff;
+  border-bottom: 1px solid #e0f2fe;
+  transition: background 0.2s;
+}
+
+.bls-json-date:hover {
+  background: #dbeafe;
+}
+
+/* VFS Global Iframe Wrapper */
+.vfs-outer-frame {
+  background: #f3f4f6;
+  border: 3px solid #9ca3af;
+  border-radius: 8px;
+  padding: 8px;
+  min-height: 300px;
+  position: relative;
+}
+
+.vfs-inner-frame {
+  background: white;
+  border: 2px solid #d1d5db;
+  border-radius: 4px;
+  padding: 12px;
+  min-height: 280px;
+}
+
+.vfs-loading-outer,
+.vfs-loading-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  color: #6b7280;
+}
+
+.vfs-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #10b981;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 12px;
+}
+
+.vfs-please-wait-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.vfs-overlay-content {
+  background: white;
+  padding: 32px 48px;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.vfs-overlay-content p {
+  margin-top: 16px;
+  color: #374151;
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+/* VFS-specific calendar cells */
+td.vfs-day-cell.vfs-available {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+td.vfs-day-cell.vfs-available:hover {
+  background: #a7f3d0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
