@@ -285,6 +285,165 @@ router.get('/json-calendar', (req, res) => {
   }, delay);
 });
 
+// Auto Slot Mutation endpoint
+router.post('/auto-mutate', (req, res) => {
+  const token = req.headers['x-session-token'];
+  
+  if (!isValidSession(token)) {
+    return res.status(401).json({ error: 'Session expired', code: 401 });
+  }
+  
+  const { mode } = req.body || {};
+  const data = readData();
+  
+  if (!data.slots) data.slots = {};
+  
+  const mutationResults = {
+    timestamp: new Date().toISOString(),
+    mode: mode || 'us-embassy',
+    daysChanged: 0,
+    slotsChanged: 0,
+    mutations: []
+  };
+  
+  // Get all months that exist
+  const months = Object.keys(data.slots);
+  if (months.length === 0) {
+    return res.json(mutationResults);
+  }
+  
+  // Random month selection
+  const monthKey = months[Math.floor(Math.random() * months.length)];
+  const centers = Object.keys(data.slots[monthKey] || {});
+  if (centers.length === 0) return res.json(mutationResults);
+  
+  const center = centers[Math.floor(Math.random() * centers.length)];
+  const types = Object.keys(data.slots[monthKey][center] || {});
+  if (types.length === 0) return res.json(mutationResults);
+  
+  const type = types[Math.floor(Math.random() * types.length)];
+  const days = data.slots[monthKey][center][type].days || {};
+  const dateKeys = Object.keys(days);
+  
+  if (dateKeys.length === 0) return res.json(mutationResults);
+  
+  // Mutation probabilities
+  const rand = Math.random();
+  
+  if (rand < 0.35) {
+    // 35% chance: Create new available slots
+    const targetDate = dateKeys[Math.floor(Math.random() * dateKeys.length)];
+    const dayData = days[targetDate];
+    
+    if (dayData && dayData.slots) {
+      const slotTimes = Object.keys(dayData.slots);
+      const slotsToActivate = Math.floor(slotTimes.length * (0.3 + Math.random() * 0.4)); // 30-70%
+      
+      let activated = 0;
+      for (let i = 0; i < slotsToActivate && i < slotTimes.length; i++) {
+        const time = slotTimes[i];
+        if (dayData.slots[time] !== 'available') {
+          dayData.slots[time] = 'available';
+          activated++;
+        }
+      }
+      
+      if (activated > 0) {
+        dayData.status = 'available';
+        mutationResults.daysChanged = 1;
+        mutationResults.slotsChanged = activated;
+        mutationResults.mutations.push({
+          type: 'Add slots',
+          date: targetDate,
+          count: activated
+        });
+      }
+    }
+  } else if (rand < 0.65) {
+    // 30% chance: Convert available to NA/Full
+    const availableDates = dateKeys.filter(d => days[d].status === 'available');
+    if (availableDates.length > 0) {
+      const targetDate = availableDates[Math.floor(Math.random() * availableDates.length)];
+      const dayData = days[targetDate];
+      const newStatus = Math.random() < 0.5 ? 'na' : 'full';
+      
+      let removed = 0;
+      if (dayData.slots) {
+        Object.keys(dayData.slots).forEach(time => {
+          if (dayData.slots[time] === 'available') {
+            dayData.slots[time] = 'booked';
+            removed++;
+          }
+        });
+      }
+      
+      dayData.status = newStatus;
+      mutationResults.daysChanged = 1;
+      mutationResults.slotsChanged = removed;
+      mutationResults.mutations.push({
+        type: newStatus === 'na' ? 'Day closed' : 'Day full',
+        date: targetDate,
+        count: removed
+      });
+    }
+  } else if (rand < 0.75) {
+    // 10% chance: Wipe slots for a day
+    const targetDate = dateKeys[Math.floor(Math.random() * dateKeys.length)];
+    const dayData = days[targetDate];
+    
+    let wiped = 0;
+    if (dayData.slots) {
+      Object.keys(dayData.slots).forEach(time => {
+        dayData.slots[time] = 'booked';
+        wiped++;
+      });
+    }
+    
+    dayData.status = 'na';
+    mutationResults.daysChanged = 1;
+    mutationResults.slotsChanged = wiped;
+    mutationResults.mutations.push({
+      type: 'Day wiped',
+      date: targetDate,
+      count: wiped
+    });
+  } else {
+    // 25% chance: Restore a NA day
+    const naDates = dateKeys.filter(d => days[d].status === 'na' || days[d].status === 'full');
+    if (naDates.length > 0) {
+      const targetDate = naDates[Math.floor(Math.random() * naDates.length)];
+      const dayData = days[targetDate];
+      
+      let restored = 0;
+      if (dayData.slots) {
+        const slotTimes = Object.keys(dayData.slots);
+        const restoreCount = Math.floor(slotTimes.length * (0.5 + Math.random() * 0.2)); // 50-70%
+        
+        for (let i = 0; i < restoreCount && i < slotTimes.length; i++) {
+          dayData.slots[slotTimes[i]] = 'available';
+          restored++;
+        }
+      }
+      
+      if (restored > 0) {
+        dayData.status = 'available';
+        mutationResults.daysChanged = 1;
+        mutationResults.slotsChanged = restored;
+        mutationResults.mutations.push({
+          type: 'Day restored',
+          date: targetDate,
+          count: restored
+        });
+      }
+    }
+  }
+  
+  // Write back to file
+  writeData(data);
+  
+  res.json(mutationResults);
+});
+
 // Logout endpoint
 router.post('/logout', (req, res) => {
   const token = req.headers['x-session-token'];

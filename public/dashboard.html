@@ -22,7 +22,8 @@
             <option value="australia-immi">Australia Immi</option>
           </select>
         </div>
-        <div class="embassy-session-info">
+        <div class="embassy-header-right">
+          <button id="open-debug-btn" class="btn-debug-open" title="Open Debug Screen">🔍 Debug</button>
           <span class="session-badge active">● Session Active</span>
           <span id="session-timer">Time: <span id="time-remaining">--:--</span></span>
           <button id="logout-btn" class="btn-link">Logout</button>
@@ -161,20 +162,144 @@
       </div>
     </div>
 
-    <!-- Developer Debug Panel -->
-    <div id="embassy-debug-panel" class="debug-panel hidden">
-      <div class="debug-header">
-        <h4>Embassy Health Monitor</h4>
-        <button id="copy-debug-btn" class="btn-copy-debug" title="Copy All Debug Info">📋 Copy All</button>
+
+    <!-- Developer Debug Panel - Expanded Modal -->
+    <div id="embassy-debug-modal" class="debug-modal hidden">
+      <div class="debug-modal-content">
+        <div class="debug-modal-header">
+          <h3>🔍 Embassy Simulator Debug Screen</h3>
+          <button id="debug-modal-close" class="debug-close-btn">✕</button>
+        </div>
+        
+        <!-- Tab Navigation -->
+        <div class="debug-tabs">
+          <button class="debug-tab active" data-tab="user">👤 User View</button>
+          <button class="debug-tab" data-tab="developer">💻 Developer View</button>
+        </div>
+        
+        <!-- User View Tab -->
+        <div id="debug-tab-user" class="debug-tab-content active">
+          <div class="debug-tab-header">
+            <h4>System Status Overview</h4>
+            <button id="copy-user-btn" class="btn-copy-tab">📋 Copy All</button>
+          </div>
+          
+          <div class="status-grid">
+            <div class="status-item">
+              <span class="status-label">🔐 Session Active</span>
+              <span id="user-session" class="status-indicator">--</span>
+            </div>
+            <div class="status-item">
+              <span class="status-label">🔄 Login Redirect Working</span>
+              <span id="user-login" class="status-indicator">--</span>
+            </div>
+            <div class="status-item">
+              <span class="status-label">⏱️ Session Expiry Working</span>
+              <span id="user-expiry" class="status-indicator">--</span>
+            </div>
+            <div class="status-item">
+              <span class="status-label">📡 AJAX Calendar Load Working</span>
+              <span id="user-ajax" class="status-indicator">--</span>
+            </div>
+            <div class="status-item">
+              <span class="status-label">📅 Month Behaviour Type</span>
+              <span id="user-month-behavior" class="status-value">--</span>
+            </div>
+            <div class="status-item">
+              <span class="status-label">🔄 Auto Slot Mutation Engine</span>
+              <span id="user-mutation" class="status-indicator">--</span>
+            </div>
+            <div class="status-item">
+              <span class="status-label">👻 Ghost Dates Injected</span>
+              <span id="user-ghost" class="status-indicator">--</span>
+            </div>
+            <div class="status-item">
+              <span class="status-label">🌐 Portal Mode Active</span>
+              <span id="user-portal" class="status-value">--</span>
+            </div>
+            <div class="status-item">
+              <span class="status-label">💚 Slot Engine Healthy</span>
+              <span id="user-slot-engine" class="status-indicator">--</span>
+            </div>
+            <div class="status-item">
+              <span class="status-label">🚫 No-Availability Triggered</span>
+              <span id="user-no-avail" class="status-indicator">--</span>
+            </div>
+            <div class="status-item">
+              <span class="status-label">⚠️ Random Error Mode</span>
+              <span id="user-random-error" class="status-indicator">--</span>
+            </div>
+            <div class="status-item">
+              <span class="status-label">🇨🇦 Queue Screen Working</span>
+              <span id="user-queue" class="status-indicator">--</span>
+            </div>
+            <div class="status-item">
+              <span class="status-label">🇬🇧 Multi-Step Flow Working</span>
+              <span id="user-multistep" class="status-indicator">--</span>
+            </div>
+            <div class="status-item">
+              <span class="status-label">🇦🇺 Hidden Calendar Behaviour</span>
+              <span id="user-hidden-cal" class="status-indicator">--</span>
+            </div>
+          </div>
+          
+          <div id="copy-user-success" class="copy-success-tab hidden">✓ Copied to clipboard!</div>
+        </div>
+        
+        <!-- Developer View Tab -->
+        <div id="debug-tab-developer" class="debug-tab-content">
+          <div class="debug-tab-header">
+            <h4>Technical Diagnostics</h4>
+            <button id="copy-dev-btn" class="btn-copy-tab">📋 Copy All</button>
+          </div>
+          
+          <div class="dev-section">
+            <strong>🔐 Session Information:</strong>
+            <div id="dev-session" class="dev-content">--</div>
+          </div>
+          
+          <div class="dev-section">
+            <strong>📡 AJAX Load Stages:</strong>
+            <div id="dev-ajax-stages" class="dev-content">--</div>
+          </div>
+          
+          <div class="dev-section">
+            <strong>📅 Month Behaviour Engine:</strong>
+            <div id="dev-month-behavior" class="dev-content">--</div>
+          </div>
+          
+          <div class="dev-section">
+            <strong>🔄 Slot Mutation Log:</strong>
+            <div id="dev-slot-mutation" class="dev-content">--</div>
+          </div>
+          
+          <div class="dev-section">
+            <strong>🎨 DOM Mutation Count:</strong>
+            <div id="dev-dom-mutation" class="dev-content">--</div>
+          </div>
+          
+          <div class="dev-section">
+            <strong>⚠️ Network Errors:</strong>
+            <div id="dev-network-errors" class="dev-content">--</div>
+          </div>
+          
+          <div class="dev-section">
+            <strong>🌐 Behaviour Stack:</strong>
+            <div id="dev-behavior-stack" class="dev-content">--</div>
+          </div>
+          
+          <div class="dev-section">
+            <strong>📊 API JSON Preview:</strong>
+            <pre id="dev-json-preview" class="dev-json">--</pre>
+          </div>
+          
+          <div id="copy-dev-success" class="copy-success-tab hidden">✓ Copied to clipboard!</div>
+        </div>
       </div>
-      
-      <!-- Active Mode Display -->
-      <div class="debug-section">
-        <strong>Active Portal Mode:</strong>
-        <div id="health-active-mode" style="font-size: 0.8rem; color: #60a5fa; font-weight: 600; margin-top: 4px;">--</div>
-      </div>
-      
-      <!-- Health Status Grid -->
+    </div>
+
+    <!-- Legacy Health Grid (Hidden, kept for compatibility) -->
+    <div id="embassy-debug-panel" class="debug-panel hidden" style="display: none;">
       <div class="debug-section health-grid">
         <div class="health-item">
           <span class="health-label">Login Enforcement:</span>
@@ -208,11 +333,28 @@
           <span class="health-label">No-Availability:</span>
           <span id="health-no-avail" class="health-value">--</span>
         </div>
+        <div class="health-item">
+          <span class="health-label">Auto-Mutation:</span>
+          <span id="health-auto-mutation" class="health-value">--</span>
+        </div>
       </div>
       
       <div class="debug-section">
         <strong>Session Token:</strong>
         <div id="debug-session-status" style="font-size: 0.65rem; color: #9ca3af; word-break: break-all;">--</div>
+      </div>
+      
+      <div class="debug-section">
+        <strong>Month Behaviour Report:</strong>
+        <div id="debug-month-behavior" style="font-size: 0.7rem; line-height: 1.5;">
+          <div><span style="color: #9ca3af;">Active Month:</span> <span id="month-active">--</span></div>
+          <div><span style="color: #9ca3af;">Behaviour Type:</span> <span id="month-behavior-type">--</span></div>
+          <div><span style="color: #9ca3af;">Last Load:</span> <span id="month-load-time">--</span> ms</div>
+          <div><span style="color: #9ca3af;">Errors:</span> <span id="month-errors">None</span></div>
+          <div><span style="color: #9ca3af;">Ghost Dates:</span> <span id="month-ghost">0</span></div>
+          <div><span style="color: #9ca3af;">DOM Mutations:</span> <span id="month-mutations">0</span></div>
+          <div><span style="color: #9ca3af;">Availability:</span> <span id="month-availability">--</span></div>
+        </div>
       </div>
       
       <div class="debug-section">
@@ -226,12 +368,6 @@
       <div id="copy-success-msg" class="copy-success hidden">✓ Copied to clipboard!</div>
     </div>
 
-    <div class="embassy-footer-toggle">
-      <label class="toggle">
-        <input type="checkbox" id="embassy-debug-toggle">
-        <span>Embassy Debug Mode</span>
-      </label>
-    </div>
   </div>
 
   <script src="dashboard.js"></script>
