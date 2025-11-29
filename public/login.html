@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>US Embassy Appointment System - Login</title>
+  <link rel="stylesheet" href="styles.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+  <div class="app-root">
+    <div class="card embassy-login">
+      <h1>US Embassy Appointment System</h1>
+      <p class="embassy-subtitle">Visa Appointment Portal</p>
+      
+      <div class="form-group">
+        <label>Email Address / Username</label>
+        <input id="embassy-username" type="text" autocomplete="off" placeholder="Enter your email">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input id="embassy-password" type="password" autocomplete="off" placeholder="Enter your password">
+      </div>
+      
+      <button id="embassy-login-btn" class="btn primary">
+        <span id="login-btn-text">Sign In</span>
+        <span id="login-spinner" class="spinner hidden"></span>
+      </button>
+      
+      <div id="embassy-login-error" class="error-text"></div>
+      
+      <div class="embassy-footer">
+        <p class="embassy-notice">
+          Please ensure you have a stable internet connection. 
+          Session will expire after 7 minutes of inactivity.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      const usernameInput = document.getElementById('embassy-username');
+      const passwordInput = document.getElementById('embassy-password');
+      const loginBtn = document.getElementById('embassy-login-btn');
+      const loginBtnText = document.getElementById('login-btn-text');
+      const loginSpinner = document.getElementById('login-spinner');
+      const errorDiv = document.getElementById('embassy-login-error');
+
+      function showError(msg) {
+        errorDiv.textContent = msg;
+        errorDiv.style.display = 'block';
+      }
+
+      function hideError() {
+        errorDiv.textContent = '';
+        errorDiv.style.display = 'none';
+      }
+
+      function setLoading(isLoading) {
+        loginBtn.disabled = isLoading;
+        if (isLoading) {
+          loginBtnText.classList.add('hidden');
+          loginSpinner.classList.remove('hidden');
+        } else {
+          loginBtnText.classList.remove('hidden');
+          loginSpinner.classList.add('hidden');
+        }
+      }
+
+      function performLogin() {
+        const username = usernameInput.value.trim();
+        const password = passwordInput.value.trim();
+
+        if (!username || !password) {
+          showError('Please enter both email and password.');
+          return;
+        }
+
+        hideError();
+        setLoading(true);
+
+        fetch('/api/embassy/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.sessionToken) {
+            // Store session token
+            localStorage.setItem('embassySessionToken', data.sessionToken);
+            localStorage.setItem('embassySessionStart', Date.now().toString());
+            
+            // Redirect to dashboard
+            window.location.href = '/dashboard';
+          } else {
+            showError(data.error || 'Login failed. Please try again.');
+            setLoading(false);
+          }
+        })
+        .catch(err => {
+          showError('Connection error. Please check your internet and try again.');
+          setLoading(false);
+        });
+      }
+
+      loginBtn.addEventListener('click', performLogin);
+
+      passwordInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          performLogin();
+        }
+      });
+
+      usernameInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          passwordInput.focus();
+        }
+      });
+
+      // Check if already logged in
+      const existingToken = localStorage.getItem('embassySessionToken');
+      if (existingToken) {
+        // Validate session
+        fetch('/api/embassy/validate-session?token=' + encodeURIComponent(existingToken))
+          .then(res => res.json())
+          .then(data => {
+            if (data.valid) {
+              window.location.href = '/dashboard';
+            }
+          })
+          .catch(() => {
+            // Invalid session, stay on login
+          });
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Select Appointment Time - US Embassy</title>
+  <link rel="stylesheet" href="styles.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+  <div class="app-root">
+    <div class="card embassy-time-select">
+      <div class="embassy-header">
+        <h2>Select Appointment Time</h2>
+        <div class="embassy-session-info">
+          <span id="session-timer">Session: <span id="time-remaining">--:--</span></span>
+          <button id="back-btn" class="btn-link">← Back to Calendar</button>
+        </div>
+      </div>
+
+      <div class="appointment-info">
+        <p><strong>Selected Date:</strong> <span id="selected-date-display">--</span></p>
+        <p><strong>Center:</strong> <span id="selected-center-display">--</span></p>
+        <p><strong>Visa Type:</strong> <span id="selected-type-display">--</span></p>
+      </div>
+
+      <div id="time-slots-loading" class="calendar-loading">
+        <div class="embassy-spinner"></div>
+        <p>Loading available time slots...</p>
+      </div>
+
+      <div id="time-slots-container" class="time-slots-grid hidden">
+        <!-- Dynamically filled with embassy DOM patterns -->
+      </div>
+
+      <div id="no-slots-message" class="error-text hidden">
+        No available time slots for this date.
+      </div>
+
+      <!-- Appointment Summary Modal -->
+      <div id="appointment-summary-modal" class="session-popup hidden">
+        <div class="session-popup-inner">
+          <h3>Appointment Summary</h3>
+          <div class="summary-content">
+            <p><strong>Date:</strong> <span id="summary-date">--</span></p>
+            <p><strong>Time:</strong> <span id="summary-time">--</span></p>
+            <p><strong>Center:</strong> <span id="summary-center">--</span></p>
+            <p><strong>Visa Type:</strong> <span id="summary-type">--</span></p>
+          </div>
+          <p class="embassy-notice">
+            This is a demo system. No actual appointment will be created.
+          </p>
+          <button id="summary-close-btn" class="btn primary">Close</button>
+          <button id="summary-back-calendar-btn" class="btn secondary">Back to Calendar</button>
+        </div>
+      </div>
+
+      <!-- Session Expired Popup -->
+      <div id="session-expired-popup" class="session-popup hidden">
+        <div class="session-popup-inner">
+          <h3>Session Expired</h3>
+          <p>Your session has expired. Please sign in again.</p>
+          <button id="session-expired-ok-btn" class="btn primary">Sign In Again</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Debug Info Box -->
+    <div id="select-time-debug" class="debug-panel-small hidden">
+      <div class="debug-header">
+        <strong>Debug Info</strong>
+        <button id="copy-time-debug-btn" class="btn-copy-debug" title="Copy Debug Info">📋</button>
+      </div>
+      <div style="font-size: 0.7rem; color: #9ca3af;">
+        <div>Date: <span id="debug-date">--</span></div>
+        <div>Session: <span id="debug-session">--</span></div>
+        <div style="margin-top: 6px;"><strong style="color: #60a5fa;">Load Stages:</strong></div>
+        <div id="debug-slots-count" style="font-size: 0.65rem; line-height: 1.4;"><em style="color: #9ca3af;">Waiting...</em></div>
+      </div>
+      <div id="copy-success-msg-time" class="copy-success hidden">✓ Copied!</div>
+    </div>
+
+    <div class="embassy-footer-toggle">
+      <label class="toggle">
+        <input type="checkbox" id="time-debug-toggle">
+        <span>Debug Info</span>
+      </label>
+    </div>
+  </div>
+
+  <script src="select-time.js"></script>
+</body>
+</html>

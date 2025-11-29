@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 
 const slotRouter = require('./api/slotRoutes');
+const embassyRouter = require('./api/embassyRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -36,12 +37,25 @@ app.use((req, res, next) => {
   setTimeout(next, baseDelay);
 });
 
-// API router
+// API routers
 app.use('/api', slotRouter);
+app.use('/api/embassy', embassyRouter);
 
 // Fallback routes
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
+app.get('/login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
+app.get('/dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
+});
+
+app.get('/select-time', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'select-time.html'));
 });
 
 app.get('/admin', (req, res) => {
